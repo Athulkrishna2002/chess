@@ -20,7 +20,12 @@ public class King extends Piece{
      */
     @Override
     public boolean isValidMove(int startRow, int startCol, int endRow, int endCol) {
-        return false;
+
+        int rowDiff = Math.abs(endRow - startRow);
+        int colDiff = Math.abs(endCol - startCol);
+
+        // King can only move 1 square in any direction
+        return (rowDiff <= 1 && colDiff <= 1) && !(rowDiff == 0 && colDiff == 0);
     }
 
     @Override
