@@ -7,7 +7,9 @@ import com.sachu.chessgame.model.enums.PieceType;
 public class Knight extends Piece{
 
     public Knight(PieceColor color) {
+
         super(color);
+        this.type = PieceType.KNIGHT;
     }
 
     /**
@@ -20,7 +22,12 @@ public class Knight extends Piece{
      */
     @Override
     public boolean isValidMove(int startRow, int startCol, int endRow, int endCol) {
-        return false;
+
+        int rowDiff = Math.abs(endRow - startRow);
+        int colDiff = Math.abs(endCol - startCol);
+
+        //Knight moves in "L" shape (2 + 1 or 1 + 2)
+        return (rowDiff == 2 && colDiff == 1) || (rowDiff == 1 && colDiff == 2);
     }
 
     @Override

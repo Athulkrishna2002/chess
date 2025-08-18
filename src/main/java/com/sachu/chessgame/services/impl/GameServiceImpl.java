@@ -2,6 +2,7 @@ package com.sachu.chessgame.services.impl;
 
 import com.sachu.chessgame.model.Board;
 import com.sachu.chessgame.model.GameState;
+import com.sachu.chessgame.model.enums.PieceType;
 import com.sachu.chessgame.model.pieces.Piece;
 import com.sachu.chessgame.services.GameService;
 import org.springframework.stereotype.Service;
@@ -36,10 +37,15 @@ public class GameServiceImpl implements GameService {
         if (!piece.isValidMove(fromRow, fromCol, toRow, toCol)){
             return;
         }
-        if (isPathBlocked(piece, fromRow, fromCol, toRow, toCol)) {
-            return;
+
+        Piece target = grid[toRow][toCol];
+        if (target != null && target.getColor() == piece.getColor()) {
+            return; // can't capture your own piece
         }
 
+        if(requiresClearPath(piece) && isPathBlocked(piece, fromRow, fromCol, toRow, toCol)){
+            return;
+        }
 
         grid[toRow][toCol] = piece;
         grid[fromRow][fromCol] = null;
@@ -47,6 +53,11 @@ public class GameServiceImpl implements GameService {
         gameState.setCurrentTurn(
                 gameState.getCurrentTurn().equals("WHITE")? "BLACK" : "WHITE"
         );
+    }
+
+    private boolean requiresClearPath(Piece piece) {
+        PieceType t = piece.getType();
+        return t == PieceType.ROOK || t ==  PieceType.BISHOP || t == PieceType.QUEEN;
     }
 
     private boolean isPathBlocked(Piece piece, int startRow, int startCol, int endRow, int endCol) {

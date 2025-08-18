@@ -18,7 +18,11 @@ public class Bishop extends Piece{
      */
     @Override
     public boolean isValidMove(int startRow, int startCol, int endRow, int endCol) {
-        return false;
+
+        int rowDiff = Math.abs(endRow - startRow);// Maths.abs() => It’s used to get the absolute (positive) value of a number.
+        int colDiff = Math.abs(endCol - startCol);
+
+        return rowDiff == colDiff;
     }
 
     @Override
