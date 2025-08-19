@@ -19,7 +19,7 @@ public class King extends Piece{
      * @param endCol
      */
     @Override
-    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol) {
+    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board) {
 
         int rowDiff = Math.abs(endRow - startRow);
         int colDiff = Math.abs(endCol - startCol);

@@ -19,7 +19,7 @@ public class Rook extends Piece{
      * @param endCol
      */
     @Override
-    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol){
+    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board) {
         if(startRow != endRow && startCol != endCol){
             return false;
         }

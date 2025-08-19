@@ -34,7 +34,7 @@ public class GameServiceImpl implements GameService {
         if(!piece.getColor().name().equals(gameState.getCurrentTurn())){
             return;
         }
-        if (!piece.isValidMove(fromRow, fromCol, toRow, toCol)){
+        if (!piece.isValidMove(fromRow, fromCol, toRow, toCol, gameState.getBoard())){
             return;
         }
 
