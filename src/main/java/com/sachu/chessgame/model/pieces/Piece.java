@@ -23,6 +23,6 @@ public abstract class Piece {
     /**
      * Abstract method to validate the piece's move.
      */
-    public abstract boolean isValidMove(int startRow, int startCol, int endRow, int endCol);
+    public abstract boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board);
     public abstract String getSymbol();  // ← NEW for Unicode display
 }

@@ -16,4 +16,6 @@ public class GameState {
     private boolean isCheckmate;
     private boolean isStalemate;
     private boolean gameOver;
+
+
 }
