@@ -1,5 +1,6 @@
 package com.sachu.chessgame.model.pieces;
 
+import com.sachu.chessgame.model.GameState;
 import com.sachu.chessgame.model.enums.PieceColor;
 import com.sachu.chessgame.model.enums.PieceType;
 import com.sachu.chessgame.model.Board;
@@ -23,6 +24,6 @@ public abstract class Piece {
     /**
      * Abstract method to validate the piece's move.
      */
-    public abstract boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board);
+    public abstract boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board, GameState state);
     public abstract String getSymbol();  // ← NEW for Unicode display
 }

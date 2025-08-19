@@ -1,6 +1,7 @@
 package com.sachu.chessgame.model.pieces;
 
 import com.sachu.chessgame.model.Board;
+import com.sachu.chessgame.model.GameState;
 import com.sachu.chessgame.model.enums.PieceColor;
 import com.sachu.chessgame.model.enums.PieceType;
 
@@ -20,7 +21,7 @@ public class Queen extends Piece{
      * @param board
      */
     @Override
-    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board) {
+    public boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board, GameState state) {
         int rowDiff = Math.abs(endRow - startRow);
         int colDiff = Math.abs(endCol - startCol);
 
@@ -36,4 +37,10 @@ public class Queen extends Piece{
     public String getSymbol() {
         return color == PieceColor.WHITE ? "♕" : "♛";
     }
+
+    @Override
+    public PieceType getType() {
+        return PieceType.QUEEN;
+    }
+
 }

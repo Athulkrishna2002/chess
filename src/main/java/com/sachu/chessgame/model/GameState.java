@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class GameState {
     private String gameId;
@@ -16,6 +15,13 @@ public class GameState {
     private boolean isCheckmate;
     private boolean isStalemate;
     private boolean gameOver;
+
+    // 👇 Add for En Passant
+    private int lastMoveFromRow;
+    private int lastMoveFromCol;
+    private int lastMoveToRow;
+    private int lastMoveToCol;
+
 
 
 }
