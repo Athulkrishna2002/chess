@@ -30,8 +30,9 @@ public class GameController {
                             @RequestParam int fromCol,
                             @RequestParam int toRow,
                             @RequestParam int toCol,
+                            @RequestParam String promotionChoice,
                             Model model) {
-        gameService.movePiece(fromRow, fromCol, toRow, toCol);
+        gameService.movePiece(fromRow, fromCol, toRow, toCol, promotionChoice);
         model.addAttribute("board", gameService.getCurrentGame().getBoard().getGrid());
         return "chessboard";
     }

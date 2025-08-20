@@ -26,7 +26,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public boolean movePiece(int startRow, int startCol, int endRow, int endCol) {
+    public boolean movePiece(int startRow, int startCol, int endRow, int endCol, String promotionChoice) {
         Board board = gameState.getBoard();
         Piece piece = board.getPieceAt(startRow, startCol);
 
@@ -58,6 +58,29 @@ public class GameServiceImpl implements GameService {
         // ✅ Perform the move
         board.setPieceAt(endRow, endCol, piece);
         board.setPieceAt(startRow, startCol, null);
+
+        // ✅ Pawn Promotion check
+        if (piece instanceof Pawn) {
+            if ((piece.getColor() == PieceColor.WHITE && endRow == 0) ||
+                    (piece.getColor() == PieceColor.BLACK && endRow == 7)) {
+                // Auto promote to Queen
+                Piece promoted;
+                switch (promotionChoice != null ? promotionChoice.toUpperCase() : "QUEEN") {
+                    case "ROOK":
+                        promoted = new com.sachu.chessgame.model.pieces.Rook(piece.getColor());
+                        break;
+                    case "BISHOP":
+                        promoted = new com.sachu.chessgame.model.pieces.Bishop(piece.getColor());
+                        break;
+                    case "KNIGHT":
+                        promoted = new com.sachu.chessgame.model.pieces.Knight(piece.getColor());
+                        break;
+                    default:
+                        promoted = new com.sachu.chessgame.model.pieces.Queen(piece.getColor());
+                }
+                board.setPieceAt(endRow, endCol, promoted);
+            }
+        }
 
         // Update last move
         gameState.setLastMoveFromRow(startRow);
