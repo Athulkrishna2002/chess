@@ -38,14 +38,15 @@
     <input type="hidden" name="fromCol" id="fromCol">
     <input type="hidden" name="toRow" id="toRow">
     <input type="hidden" name="toCol" id="toCol">
+    <input type="hidden" name="promotionChoice" id="promotionChoice">
 </form>
 
 <script>
     let selectedSquare = null;
 
     function squareClicked(cell) {
-        const row = cell.getAttribute("data-row");
-        const col = cell.getAttribute("data-col");
+        const row = parseInt(cell.getAttribute("data-row"));
+        const col = parseInt(cell.getAttribute("data-col"));
 
         if (!selectedSquare) {
             // First click → select square
@@ -57,6 +58,18 @@
             document.getElementById("fromCol").value = selectedSquare.col;
             document.getElementById("toRow").value = row;
             document.getElementById("toCol").value = col;
+
+            // ✅ Check if it's a pawn promotion
+            const movingPiece = document.querySelector(
+                `td[data-row='${selectedSquare.row}'][data-col='${selectedSquare.col}'] span`
+            ).innerText;
+
+            if ((movingPiece === "♙" && row === 0) || (movingPiece === "♟" && row === 7)) {
+                // Ask player for promotion choice
+                const choice = prompt("Promote pawn to (Queen, Rook, Bishop, Knight):", "Queen");
+                document.getElementById("promotionChoice").value = choice ? choice.toUpperCase() : "QUEEN";
+            }
+
             document.getElementById("moveForm").submit();
         }
     }
