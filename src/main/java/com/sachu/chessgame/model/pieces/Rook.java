@@ -7,6 +7,8 @@ import com.sachu.chessgame.model.enums.PieceType;
 
 public class Rook extends Piece{
 
+    private boolean hasMoved = false;
+
     public Rook(PieceColor color) {
         super(color);
     }
@@ -35,6 +37,14 @@ public class Rook extends Piece{
     @Override
     public PieceType getType() {
         return PieceType.ROOK;
+    }
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 
 }
