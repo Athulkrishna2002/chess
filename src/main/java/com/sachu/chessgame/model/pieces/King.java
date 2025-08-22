@@ -10,7 +10,7 @@ public class King extends Piece{
     public King(PieceColor color) {
         super(color);
     }
-
+        private boolean hasMoved = false;
     /**
      * Abstract method to validate the piece's move.
      *
@@ -27,6 +27,14 @@ public class King extends Piece{
 
         // King can only move 1 square in any direction
         return (rowDiff <= 1 && colDiff <= 1) && !(rowDiff == 0 && colDiff == 0);
+    }
+
+    public boolean hasMoved() {
+        return hasMoved;
+    }
+
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
     }
 
     @Override

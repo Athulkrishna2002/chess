@@ -37,6 +37,12 @@ public class GameController {
         return "chessboard";
     }
 
+    @GetMapping("/reset")
+    public String reset(Model model) {
+        gameService.resetGame();
+        model.addAttribute("board", gameService.getCurrentGame().getBoard().getGrid());
+        return "chessboard"; // reload chessboard.html
+    }
 
 
 }

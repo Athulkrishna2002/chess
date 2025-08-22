@@ -7,4 +7,5 @@ public interface GameService {
 
     boolean movePiece(int fromRow, int fromCol, int toRow, int toCol, String promotionChoice);
 
+    void resetGame();
 }
