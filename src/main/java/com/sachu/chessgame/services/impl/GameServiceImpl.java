@@ -4,10 +4,7 @@ import com.sachu.chessgame.model.Board;
 import com.sachu.chessgame.model.GameState;
 import com.sachu.chessgame.model.enums.PieceColor;
 import com.sachu.chessgame.model.enums.PieceType;
-import com.sachu.chessgame.model.pieces.King;
-import com.sachu.chessgame.model.pieces.Pawn;
-import com.sachu.chessgame.model.pieces.Piece;
-import com.sachu.chessgame.model.pieces.Rook;
+import com.sachu.chessgame.model.pieces.*;
 import com.sachu.chessgame.services.GameService;
 import org.springframework.stereotype.Service;
 
@@ -31,62 +28,53 @@ public class GameServiceImpl implements GameService {
     public boolean movePiece(int startRow, int startCol, int endRow, int endCol, String promotionChoice) {
         Board board = gameState.getBoard();
         Piece piece = board.getPieceAt(startRow, startCol);
+        if (piece == null) return false;
 
-        if (piece == null) return false; // no piece selected
-
-        // Check turn
         if (!piece.getColor().name().equals(gameState.getCurrentTurn())) return false;
 
-        // Handle Castling
+        // Castling
         if (piece instanceof King && Math.abs(endCol - startCol) == 2 && startRow == endRow) {
             return tryCastling((King) piece, startRow, startCol, endRow, endCol);
         }
 
-        // En Passant handling
-        if (piece instanceof Pawn) {
-            if (handleEnPassant((Pawn) piece, startRow, startCol, endRow, endCol)) {
-                switchTurn();
-                return true;
-            }
+        // En Passant
+        if (piece instanceof Pawn && handleEnPassant((Pawn) piece, startRow, startCol, endRow, endCol)) {
+            switchTurn();
+            return true;
         }
 
         // Normal move validation
         if (!piece.isValidMove(startRow, startCol, endRow, endCol, board, gameState)) return false;
-
-        // Prevent capturing own piece
         Piece target = board.getPieceAt(endRow, endCol);
         if (target != null && target.getColor() == piece.getColor()) return false;
+        if (requiresClearPath(piece) && isPathBlocked(piece, startRow, startCol, endRow, endCol)) return false;
 
-        // Path blocking check (only for rook, bishop, queen)
-        if (requiresClearPath(piece) && isPathBlocked(piece, startRow, startCol, endRow, endCol)) {
-            return false; // path blocked
+        // --- SIMULATE MOVE ---
+        Piece[][] backupGrid = new Piece[8][8];
+        for (int r = 0; r < 8; r++) {
+            System.arraycopy(board.getGrid()[r], 0, backupGrid[r], 0, 8);
         }
 
-        // Perform the move
         board.setPieceAt(endRow, endCol, piece);
         board.setPieceAt(startRow, startCol, null);
 
-        // Pawn Promotion check
-        if (piece instanceof Pawn) {
-            if ((piece.getColor() == PieceColor.WHITE && endRow == 0) ||
-                    (piece.getColor() == PieceColor.BLACK && endRow == 7)) {
-                // Auto promote to Queen
-                Piece promoted;
-                switch (promotionChoice != null ? promotionChoice.toUpperCase() : "QUEEN") {
-                    case "ROOK":
-                        promoted = new com.sachu.chessgame.model.pieces.Rook(piece.getColor());
-                        break;
-                    case "BISHOP":
-                        promoted = new com.sachu.chessgame.model.pieces.Bishop(piece.getColor());
-                        break;
-                    case "KNIGHT":
-                        promoted = new com.sachu.chessgame.model.pieces.Knight(piece.getColor());
-                        break;
-                    default:
-                        promoted = new com.sachu.chessgame.model.pieces.Queen(piece.getColor());
-                }
-                board.setPieceAt(endRow, endCol, promoted);
+        // Reject move if it leaves own king in check
+        if (isInCheck(piece.getColor())) {
+            board.setGrid(backupGrid);
+            return false;
+        }
+
+        // Pawn promotion
+        if (piece instanceof Pawn && ((piece.getColor() == PieceColor.WHITE && endRow == 0) ||
+                (piece.getColor() == PieceColor.BLACK && endRow == 7))) {
+            Piece promoted;
+            switch (promotionChoice != null ? promotionChoice.toUpperCase() : "QUEEN") {
+                case "ROOK": promoted = new Rook(piece.getColor()); break;
+                case "BISHOP": promoted = new Bishop(piece.getColor()); break;
+                case "KNIGHT": promoted = new Knight(piece.getColor()); break;
+                default: promoted = new Queen(piece.getColor());
             }
+            board.setPieceAt(endRow, endCol, promoted);
         }
 
         // Update last move
@@ -96,6 +84,47 @@ public class GameServiceImpl implements GameService {
         gameState.setLastMoveToCol(endCol);
 
         // Switch turn
+        switchTurn();
+
+        // Update check status for opponent
+        PieceColor opponent = gameState.getCurrentTurn().equals("WHITE") ? PieceColor.BLACK : PieceColor.WHITE;
+        gameState.setCheck(isInCheck(opponent));
+
+        return true;
+    }
+
+
+    private boolean tryCastling(King king, int fromRow, int fromCol, int toRow, int toCol) {
+        Board board = gameState.getBoard();
+        if (king.hasMoved() || isInCheck(king.getColor())) return false;
+
+        int step = (toCol > fromCol) ? 1 : -1;
+        int rookCol = (step == 1) ? 7 : 0;
+        Piece rookPiece = board.getPieceAt(fromRow, rookCol);
+        if (!(rookPiece instanceof Rook)) return false;
+        Rook rook = (Rook) rookPiece;
+        if (rook.hasMoved()) return false;
+
+        // Squares between king and rook must be empty
+        for (int c = fromCol + step; c != rookCol; c += step) {
+            if (board.getPieceAt(fromRow, c) != null) return false;
+        }
+
+        // King cannot move through or land in check
+        for (int c = fromCol; c != toCol + step; c += step) {
+            if (isSquareAttacked(board, gameState, fromRow, c, king.getColor())) return false;
+        }
+
+        // Perform castling
+        board.setPieceAt(fromRow, fromCol, null);
+        board.setPieceAt(toRow, toCol, king);
+        king.setHasMoved(true);
+
+        int rookTargetCol = (step == 1) ? (toCol - 1) : (toCol + 1);
+        board.setPieceAt(fromRow, rookCol, null);
+        board.setPieceAt(fromRow, rookTargetCol, rook);
+        rook.setHasMoved(true);
+
         switchTurn();
         return true;
     }
@@ -197,62 +226,6 @@ public class GameServiceImpl implements GameService {
         this.gameState = state;
     }
 
-    private boolean tryCastling(King king, int fromRow, int fromCol, int toRow, int toCol) {
-        if (king.hasMoved()) return false;
-
-        if (isInCheck(king.getColor())) return false; // king in check -> no castling
-
-        Board board = gameState.getBoard();
-
-        // Kingside castling
-        if (toCol == fromCol + 2) {
-            Piece rook = board.getPieceAt(fromRow, 7);
-            if (!(rook instanceof Rook) || ((Rook) rook).hasMoved()) return false;
-
-            // Empty squares check
-            if (board.getPieceAt(fromRow, 5) != null || board.getPieceAt(fromRow, 6) != null) return false;
-
-            // Perform castling
-            board.setPieceAt(fromRow, fromCol, null);
-            board.setPieceAt(toRow, toCol, king);
-            king.setHasMoved(true);
-
-            board.setPieceAt(fromRow, 7, null);
-            board.setPieceAt(fromRow, 5, rook);
-            ((Rook) rook).setHasMoved(true);
-
-            switchTurn();
-            return true;
-        }
-
-        // Queenside castling (long)
-        if (toCol == fromCol - 2) {
-            Piece rook = board.getPieceAt(fromRow, 0);
-            if (!(rook instanceof Rook) || ((Rook) rook).hasMoved()) return false;
-
-            if (board.getPieceAt(fromRow, 1) != null || board.getPieceAt(fromRow, 2) != null || board.getPieceAt(fromRow, 3) != null)
-                return false;
-
-            if (isSquareAttacked(board, gameState, fromRow, 2, king.getColor()) ||
-                    isSquareAttacked(board, gameState, fromRow, 3, king.getColor())) {
-                // castling is not allowed
-            }
-
-            // Perform castling
-            board.setPieceAt(fromRow, fromCol, null);
-            board.setPieceAt(toRow, toCol, king);
-            king.setHasMoved(true);
-
-            board.setPieceAt(fromRow, 0, null);
-            board.setPieceAt(fromRow, 3, rook);
-            ((Rook) rook).setHasMoved(true);
-
-            switchTurn();
-            return true;
-        }
-
-        return false;
-    }
 
 
     private boolean isInCheck(PieceColor color) {
