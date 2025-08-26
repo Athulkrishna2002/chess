@@ -5,6 +5,7 @@ import com.sachu.chessgame.model.GameState;
 import com.sachu.chessgame.model.pieces.Piece;
 import com.sachu.chessgame.services.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,11 +31,20 @@ public class GameController {
                             @RequestParam int fromCol,
                             @RequestParam int toRow,
                             @RequestParam int toCol,
-                            @RequestParam String promotionChoice,
+                            @RequestParam(required = false) String promotionChoice,
                             Model model) {
+
         gameService.movePiece(fromRow, fromCol, toRow, toCol, promotionChoice);
-        model.addAttribute("board", gameService.getCurrentGame().getBoard().getGrid());
-        return "chessboard";
+
+        GameState gameState = gameService.getCurrentGame();
+
+        model.addAttribute("board", gameState.getBoard().getGrid());
+        model.addAttribute("turn", gameState.getCurrentTurn());
+        model.addAttribute("inCheck", gameState.isCheck());
+        model.addAttribute("checkmate", gameState.isCheckmate());
+        model.addAttribute("stalemate", gameState.isStalemate());
+
+        return "chessboard";  // reload UI
     }
 
     @GetMapping("/reset")
