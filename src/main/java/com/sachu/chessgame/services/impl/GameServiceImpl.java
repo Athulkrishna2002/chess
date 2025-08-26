@@ -25,29 +25,32 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public boolean movePiece(int startRow, int startCol, int endRow, int endCol, String promotionChoice) {
+    public GameState movePiece(int startRow, int startCol, int endRow, int endCol, String promotionChoice) {
         Board board = gameState.getBoard();
         Piece piece = board.getPieceAt(startRow, startCol);
-        if (piece == null) return false;
+        if (piece == null) return gameState;
 
-        if (!piece.getColor().name().equals(gameState.getCurrentTurn())) return false;
+        if (!piece.getColor().name().equals(gameState.getCurrentTurn())) return gameState;
 
         // Castling
         if (piece instanceof King && Math.abs(endCol - startCol) == 2 && startRow == endRow) {
-            return tryCastling((King) piece, startRow, startCol, endRow, endCol);
+            if (tryCastling((King) piece, startRow, startCol, endRow, endCol)) {
+                return gameState;
+            }
+            return gameState;
         }
 
         // En Passant
         if (piece instanceof Pawn && handleEnPassant((Pawn) piece, startRow, startCol, endRow, endCol)) {
             switchTurn();
-            return true;
+            return gameState;
         }
 
         // Normal move validation
-        if (!piece.isValidMove(startRow, startCol, endRow, endCol, board, gameState)) return false;
+        if (!piece.isValidMove(startRow, startCol, endRow, endCol, board, gameState)) return gameState;
         Piece target = board.getPieceAt(endRow, endCol);
-        if (target != null && target.getColor() == piece.getColor()) return false;
-        if (requiresClearPath(piece) && isPathBlocked(piece, startRow, startCol, endRow, endCol)) return false;
+        if (target != null && target.getColor() == piece.getColor()) return gameState;
+        if (requiresClearPath(piece) && isPathBlocked(piece, startRow, startCol, endRow, endCol)) return gameState;
 
         // --- SIMULATE MOVE ---
         Piece[][] backupGrid = new Piece[8][8];
@@ -61,7 +64,7 @@ public class GameServiceImpl implements GameService {
         // Reject move if it leaves own king in check
         if (isInCheck(piece.getColor())) {
             board.setGrid(backupGrid);
-            return false;
+            return gameState;
         }
 
         // Pawn promotion
@@ -88,9 +91,15 @@ public class GameServiceImpl implements GameService {
 
         // Update check status for opponent
         PieceColor opponent = gameState.getCurrentTurn().equals("WHITE") ? PieceColor.BLACK : PieceColor.WHITE;
-        gameState.setCheck(isInCheck(opponent));
+        PieceColor currentTurnColor = gameState.getCurrentTurn().equals("WHITE") ? PieceColor.WHITE : PieceColor.BLACK;
+        boolean inCheck = isInCheck(currentTurnColor);
+        gameState.setCheck(inCheck);
 
-        return true;
+        if (inCheck) {
+            System.out.println(currentTurnColor + " King is in CHECK!");
+        }
+
+        return gameState;
     }
 
 

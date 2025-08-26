@@ -3,31 +3,81 @@
 <head>
     <title>Chess Game</title>
     <style>
-        table { border-collapse: collapse; margin: 12px 0; }
-        td {
-            width: 60px; height: 60px; text-align: center; vertical-align: middle;
-            font-size: 32px; cursor: pointer; user-select: none;
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
         }
+
+        table {
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        td {
+            width: 70px;
+            height: 70px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 36px;
+            cursor: pointer;
+            user-select: none;
+        }
+
         .white { background: #f0d9b5; }
         .black { background: #b58863; }
         .selected { outline: 3px solid #ff5252; }
-        .topbar { display:flex; gap:12px; align-items:center; }
-        .badge { padding: 4px 8px; border-radius: 8px; background:#eee; font-family: sans-serif; }
-        .btn { padding: 6px 10px; border: 1px solid #444; background:#fff; cursor:pointer; border-radius:6px; }
-        .msg { font-family:sans-serif; margin-top:8px; }
+
+        .topbar {
+            display:flex;
+            gap:20px;
+            align-items:center;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 8px;
+            background:#eee;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            border: 1px solid #444;
+            background:#fff;
+            cursor:pointer;
+            border-radius:6px;
+        }
+
+        .btn:hover {
+            background:#f2f2f2;
+        }
+
+        .msg {
+            margin-top:8px;
+            font-weight:bold;
+            color:#333;
+        }
+
+        .check {
+            background: #ff5252;
+            color: white;
+        }
     </style>
 </head>
 <body>
 <div class="topbar">
     <div class="badge">Turn: <span th:text="${turn}">WHITE</span></div>
-    <div class="badge" th:if="${inCheck}">CHECK!</div>
+    <div class="badge check" th:if="${inCheck}">CHECK!</div>
     <form th:action="@{/reset}" method="get" style="margin:0;">
         <button class="btn" type="submit">Reset</button>
     </form>
 </div>
 
 <div class="msg" th:if="${moveOk != null}">
-    <span th:text="${moveOk} ? 'Move accepted' : 'Invalid move'"></span>
+    <span th:text="${moveOk} ? '✅ Move accepted' : '❌ Invalid move'"></span>
 </div>
 
 <table id="chessboard">
@@ -81,12 +131,11 @@
         // Detect pawn promotion by reading the symbol from the source square
         const movingSymbol = selectedCell.querySelector("span")?.innerText || "";
 
-        // White pawn (♙) reaching rank 0, Black pawn (♟) reaching rank 7
         if ((movingSymbol === "♙" && row === 0) || (movingSymbol === "♟" && row === 7)) {
             const choice = prompt("Promote pawn to (Queen, Rook, Bishop, Knight):", "Queen");
             document.getElementById("promotionChoice").value = (choice || "Queen").toUpperCase();
         } else {
-            document.getElementById("promotionChoice").value = ""; // not promoting
+            document.getElementById("promotionChoice").value = "";
         }
 
         clearSelection();
