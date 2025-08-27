@@ -15,13 +15,16 @@ public class GameState {
     private boolean isCheckmate;
     private boolean isStalemate;
     private boolean gameOver;
+    private boolean draw;
     private String winner;
 
-    // 👇 Add for En Passant
+    // Add for En Passant
     private int lastMoveFromRow;
     private int lastMoveFromCol;
     private int lastMoveToRow;
     private int lastMoveToCol;
+
+    private int halfMoveClock; // For 50-move rule
 
 
 
