@@ -47,4 +47,10 @@ public class Rook extends Piece{
         this.hasMoved = hasMoved;
     }
 
+    @Override
+    public Piece clone() {
+        return new Rook(this.getColor());
+    }
+
+
 }

@@ -20,9 +20,16 @@ public class GameController {
 
     @GetMapping("/board")
     public String showBoard(Model model) {
+        GameState gameState = gameService.getCurrentGame();
         Board board = new Board();
         board.initializeDefaultSetup();
-        model.addAttribute("board", board.getGrid());
+        model.addAttribute("board", gameState.getBoard().getGrid());
+        model.addAttribute("turn", gameState.getCurrentTurn());
+        model.addAttribute("inCheck", gameState.isCheck());
+        model.addAttribute("checkmate", gameState.isCheckmate());
+        model.addAttribute("stalemate", gameState.isStalemate());
+        model.addAttribute("gameOver", gameState.isGameOver());
+        model.addAttribute("winner", gameState.getWinner());
         return "chessboard";
     }
 
@@ -43,6 +50,8 @@ public class GameController {
         model.addAttribute("inCheck", gameState.isCheck());
         model.addAttribute("checkmate", gameState.isCheckmate());
         model.addAttribute("stalemate", gameState.isStalemate());
+        model.addAttribute("gameOver", gameState.isGameOver());
+        model.addAttribute("winner", gameState.getWinner());
 
         return "chessboard";  // reload UI
     }

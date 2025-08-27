@@ -50,7 +50,7 @@ public class GameServiceImpl implements GameService {
         if (!piece.isValidMove(startRow, startCol, endRow, endCol, board, gameState)) return gameState;
         Piece target = board.getPieceAt(endRow, endCol);
         if (target != null && target.getColor() == piece.getColor()) return gameState;
-        if (requiresClearPath(piece) && isPathBlocked(piece, startRow, startCol, endRow, endCol)) return gameState;
+        if (requiresClearPath(piece) && isPathBlocked(piece, startRow, startCol, endRow, endCol, board)) return gameState;
 
         // --- SIMULATE MOVE ---
         Piece[][] backupGrid = new Piece[8][8];
@@ -89,17 +89,87 @@ public class GameServiceImpl implements GameService {
         // Switch turn
         switchTurn();
 
-        // Update check status for opponent
-        PieceColor opponent = gameState.getCurrentTurn().equals("WHITE") ? PieceColor.BLACK : PieceColor.WHITE;
+// The player whose turn it is now is the one who must respond
         PieceColor currentTurnColor = gameState.getCurrentTurn().equals("WHITE") ? PieceColor.WHITE : PieceColor.BLACK;
-        boolean inCheck = isInCheck(currentTurnColor);
+
+// Is this player's king in check?
+        boolean inCheck = isInCheck(currentTurnColor, board);
         gameState.setCheck(inCheck);
 
         if (inCheck) {
             System.out.println(currentTurnColor + " King is in CHECK!");
         }
 
+// Checkmate or Stalemate
+        if (inCheck == true && !hasAnyLegalMove(board, currentTurnColor)) {
+            gameState.setCheckmate(true);
+            gameState.setGameOver(true);
+            gameState.setWinner(currentTurnColor == PieceColor.WHITE ? "BLACK" : "WHITE");
+            System.out.println(currentTurnColor + " is in CHECKMATE!");
+        }
+        else if (inCheck == false && !hasAnyLegalMove(board, currentTurnColor)) {
+            gameState.setStalemate(true);
+            gameState.setGameOver(true);
+        } else {
+            gameState.setCheckmate(false);
+            gameState.setStalemate(false);
+        }
+
+
         return gameState;
+    }
+
+
+    public boolean hasAnyLegalMove(Board board, PieceColor turn) {
+        Piece[][] grid = board.getGrid();
+
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                Piece piece = grid[row][col];
+                if (piece != null && piece.getColor() == turn) {
+                    for (int toRow = 0; toRow < 8; toRow++) {
+                        for (int toCol = 0; toCol < 8; toCol++) {
+
+                            // 🚫 Skip same-square "moves"
+                            if (row == toRow && col == toCol) continue;
+
+
+                            // 🚫 Skip if destination has own piece
+                            Piece targetPiece = grid[toRow][toCol];
+                            if (targetPiece != null && targetPiece.getColor() == turn) continue;
+
+
+                            if (piece.isValidMove(row, col, toRow, toCol, board, gameState)) {
+                                boolean blocked = false;
+
+                                // Only check path for Rook, Bishop, Queen
+                                if (piece instanceof Rook || piece instanceof Bishop || piece instanceof Queen) {
+                                    blocked = isPathBlocked(piece, row, col, toRow, toCol, board);
+                                }
+
+                                if (!blocked) {
+                                    // 📝 simulate move
+                                    Board simulatedBoard = board.clone();
+                                    simulatedBoard.movePiece(row, col, toRow, toCol);
+
+                                    if (!isInCheck(turn, simulatedBoard)) {
+                                        System.out.println("Testing move: "
+                                                + piece.getClass().getSimpleName()
+                                                + " from (" + row + "," + col + ") to (" + toRow + "," + toCol + ")");
+                                        System.out.println(" → Legal escape move found!");
+                                        return true;
+                                    }
+                                }
+                            }
+
+
+                        }
+                    }
+                }
+            }
+        }
+
+        return false; // No escape moves found
     }
 
 
@@ -197,8 +267,8 @@ public class GameServiceImpl implements GameService {
     }
 
 
-    private boolean isPathBlocked(Piece piece, int startRow, int startCol, int endRow, int endCol) {
-        Board board = gameState.getBoard();
+    private boolean isPathBlocked(Piece piece, int startRow, int startCol, int endRow, int endCol, Board board) {
+//        Board board = gameState.getBoard();
 
         int rowDir = Integer.compare(endRow, startRow); // -1, 0, or 1
         int colDir = Integer.compare(endCol, startCol); // -1, 0, or 1
@@ -208,8 +278,12 @@ public class GameServiceImpl implements GameService {
 
         // Loop until just before destination
         while (row != endRow || col != endCol) {
+            // safety check
+            if (row < 0 || row >= 8 || col < 0 || col >= 8) {
+                return true; // treat out of bounds as blocked
+            }
             if (board.getPieceAt(row, col) != null) {
-                return true; // something is in the way
+                return true;
             }
             row += rowDir;
             col += colDir;
@@ -235,46 +309,48 @@ public class GameServiceImpl implements GameService {
         this.gameState = state;
     }
 
-
-
     private boolean isInCheck(PieceColor color) {
-        Board board = gameState.getBoard();
+        return isInCheck(color, gameState.getBoard());
+    }
+
+
+    private boolean isInCheck(PieceColor color, Board board) {
         Piece[][] grid = board.getGrid();
 
-        // Find the king
         int kingRow = -1, kingCol = -1;
+
+        outer:
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 Piece piece = grid[r][c];
                 if (piece instanceof King && piece.getColor() == color) {
                     kingRow = r;
                     kingCol = c;
-                    break;
+                    break outer;
                 }
             }
         }
 
-        if (kingRow == -1) {
-            // should never happen if board is valid
-            return false;
-        }
+        if (kingRow == -1) return false; // king not found
 
-        // Check if any opponent piece can attack king
         for (int r = 0; r < 8; r++) {
             for (int c = 0; c < 8; c++) {
                 Piece attacker = grid[r][c];
                 if (attacker != null && attacker.getColor() != color) {
                     if (attacker.isValidMove(r, c, kingRow, kingCol, board, gameState)) {
-                        if (!isPathBlocked(attacker, r, c, kingRow, kingCol)) {
-                            return true; // king is attacked
+                        if (!(attacker instanceof Knight || attacker instanceof Pawn) &&
+                                isPathBlocked(attacker, r, c, kingRow, kingCol, board)) {
+                            continue;
                         }
+                        return true;
                     }
                 }
             }
         }
-
-        return false; // no attacks found
+        return false;
     }
+
+
 
     public boolean isSquareAttacked(Board board, GameState state, int row, int col, PieceColor defenderColor) {
         Piece[][] grid = board.getGrid();
@@ -284,7 +360,7 @@ public class GameServiceImpl implements GameService {
                 Piece attacker = grid[r][c];
                 if (attacker != null && attacker.getColor() != defenderColor) {
                     if (attacker.isValidMove(r, c, row, col, board, state)) {
-                        if (!isPathBlocked(attacker, r, c, row, col)) {
+                        if (!isPathBlocked(attacker, r, c, row, col, board)) {
                             return true; // square is under attack
                         }
                     }
