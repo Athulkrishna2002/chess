@@ -76,6 +76,15 @@
     </form>
 </div>
 
+<!-- ✅ Add game result messages -->
+<div class="msg" th:if="${checkmate}">
+    <span th:text="${winner + ' Wins by Checkmate!'}"></span>
+</div>
+
+<div class="msg" th:if="${stalemate}">
+    <span>🤝 Stalemate - It's a Draw!</span>
+</div>
+
 <div class="msg" th:if="${moveOk != null}">
     <span th:text="${moveOk} ? '✅ Move accepted' : '❌ Invalid move'"></span>
 </div>

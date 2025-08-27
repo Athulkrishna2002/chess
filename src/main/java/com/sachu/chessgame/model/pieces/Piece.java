@@ -5,7 +5,7 @@ import com.sachu.chessgame.model.enums.PieceColor;
 import com.sachu.chessgame.model.enums.PieceType;
 import com.sachu.chessgame.model.Board;
 
-public abstract class Piece {
+public abstract class Piece implements Cloneable{
     protected PieceColor color;
     protected PieceType type;
 
@@ -26,4 +26,13 @@ public abstract class Piece {
      */
     public abstract boolean isValidMove(int startRow, int startCol, int endRow, int endCol, Board board, GameState state);
     public abstract String getSymbol();  // ← NEW for Unicode display
+
+    @Override
+    public Piece clone() {
+        try {
+            return (Piece) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

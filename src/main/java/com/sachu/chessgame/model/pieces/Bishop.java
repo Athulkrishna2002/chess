@@ -38,4 +38,11 @@ public class Bishop extends Piece{
         return PieceType.BISHOP;
     }
 
+    @Override
+    public Piece clone() {
+        return new Bishop(this.getColor());
+    }
+
+
+
 }

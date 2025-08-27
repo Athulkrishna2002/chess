@@ -15,6 +15,7 @@ public class GameState {
     private boolean isCheckmate;
     private boolean isStalemate;
     private boolean gameOver;
+    private String winner;
 
     // 👇 Add for En Passant
     private int lastMoveFromRow;

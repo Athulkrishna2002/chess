@@ -47,4 +47,10 @@ public class King extends Piece{
         return PieceType.KING;
     }
 
+    @Override
+    public Piece clone() {
+        return new King(this.getColor());
+    }
+
+
 }
