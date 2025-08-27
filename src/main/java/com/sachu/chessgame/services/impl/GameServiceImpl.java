@@ -67,6 +67,9 @@ public class GameServiceImpl implements GameService {
             return gameState;
         }
 
+        // Update 50-move rule counter
+        updateGameStateAfterMove(piece, target, startRow, startCol, endRow, endCol);
+
         // Pawn promotion
         if (piece instanceof Pawn && ((piece.getColor() == PieceColor.WHITE && endRow == 0) ||
                 (piece.getColor() == PieceColor.BLACK && endRow == 7))) {
@@ -130,11 +133,11 @@ public class GameServiceImpl implements GameService {
                     for (int toRow = 0; toRow < 8; toRow++) {
                         for (int toCol = 0; toCol < 8; toCol++) {
 
-                            // 🚫 Skip same-square "moves"
+                            //  Skip same-square "moves"
                             if (row == toRow && col == toCol) continue;
 
 
-                            // 🚫 Skip if destination has own piece
+                            //  Skip if destination has own piece
                             Piece targetPiece = grid[toRow][toCol];
                             if (targetPiece != null && targetPiece.getColor() == turn) continue;
 
@@ -148,7 +151,7 @@ public class GameServiceImpl implements GameService {
                                 }
 
                                 if (!blocked) {
-                                    // 📝 simulate move
+                                    // simulate move
                                     Board simulatedBoard = board.clone();
                                     simulatedBoard.movePiece(row, col, toRow, toCol);
 
@@ -369,5 +372,21 @@ public class GameServiceImpl implements GameService {
         }
         return false;
     }
+
+    private void updateGameStateAfterMove(Piece piece, Piece capturedPiece, int startRow, int startCol, int endRow, int endCol) {
+        // Reset 50-move counter if pawn moved or capture happened
+        if (piece instanceof Pawn || capturedPiece != null) {
+            gameState.setHalfMoveClock(0);
+        } else {
+            gameState.setHalfMoveClock(gameState.getHalfMoveClock() + 1);
+        }
+
+        // Check 50-move rule
+        if (gameState.getHalfMoveClock() >= 100) { // 100 half-moves = 50 moves
+            gameState.setDraw(true);
+            gameState.setWinner("DRAW (50-Move Rule)");
+        }
+    }
+
 
 }
