@@ -125,37 +125,86 @@
         const col = parseInt(cell.getAttribute("data-col"));
 
         if (!selectedCell) {
-            // First click — select
             selectedCell = cell;
             selectedCell.classList.add("selected");
             return;
         }
 
-        // Second click — submit move
-        document.getElementById("fromRow").value = parseInt(selectedCell.getAttribute("data-row"));
-        document.getElementById("fromCol").value = parseInt(selectedCell.getAttribute("data-col"));
-        document.getElementById("toRow").value = row;
-        document.getElementById("toCol").value = col;
+        const fromRow = parseInt(selectedCell.getAttribute("data-row"));
+        const fromCol = parseInt(selectedCell.getAttribute("data-col"));
+        const toRow = row;
+        const toCol = col;
 
-        // Detect pawn promotion by reading the symbol from the source square
         const movingSymbol = selectedCell.querySelector("span")?.innerText || "";
+        let promotionChoice = "";
 
-        if ((movingSymbol === "♙" && row === 0) || (movingSymbol === "♟" && row === 7)) {
+        if ((movingSymbol === "♙" && toRow === 0) || (movingSymbol === "♟" && toRow === 7)) {
             const choice = prompt("Promote pawn to (Queen, Rook, Bishop, Knight):", "Queen");
-            document.getElementById("promotionChoice").value = (choice || "Queen").toUpperCase();
-        } else {
-            document.getElementById("promotionChoice").value = "";
+            promotionChoice = (choice || "Queen").toUpperCase();
         }
 
         clearSelection();
-        document.getElementById("moveForm").submit();
+
+        // AJAX request
+        fetch('/move', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: new URLSearchParams({
+                fromRow, fromCol, toRow, toCol, promotionChoice
+            })
+        })
+        .then(res => res.json())
+        .then(data => updateBoard(data))
+        .catch(err => console.error(err));
     }
 
-    // Deselect if user clicks outside the board
-    document.addEventListener('click', (e) => {
-        const board = document.getElementById('chessboard');
-        if (!board.contains(e.target)) clearSelection();
-    });
+    function updateBoard(data) {
+        const boardTable = document.getElementById("chessboard");
+        const board = data.board;
+
+        for (let r = 0; r < 8; r++) {
+            const row = boardTable.rows[r];
+            for (let c = 0; c < 8; c++) {
+                const cell = row.cells[c];
+                const piece = board[r][c];
+                cell.querySelector("span").innerText = piece ? piece.symbol : "";
+            }
+        }
+
+        document.querySelector(".badge span").innerText = data.turn;
+
+        // Update check/checkmate/stalemate messages
+        document.querySelectorAll(".msg").forEach(el => el.remove());
+
+        if (data.checkmate) {
+            const msg = document.createElement("div");
+            msg.className = "msg";
+            msg.innerText = `${data.winner} Wins by Checkmate!`;
+            document.body.insertBefore(msg, boardTable);
+        } else if (data.stalemate) {
+            const msg = document.createElement("div");
+            msg.className = "msg";
+            msg.innerText = "🤝 Stalemate - It's a Draw!";
+            document.body.insertBefore(msg, boardTable);
+        }
+
+        // ✅ Update CHECK! badge dynamically
+    const topbar = document.querySelector(".topbar");
+    let checkBadge = topbar.querySelector(".check");
+
+    if (data.inCheck) {
+        if (!checkBadge) {
+            checkBadge = document.createElement("div");
+            checkBadge.className = "badge check";
+            checkBadge.innerText = "CHECK!";
+            topbar.insertBefore(checkBadge, topbar.querySelector("form"));
+        }
+    } else {
+        if (checkBadge) checkBadge.remove();
+    }
+
+    }
 </script>
+
 </body>
 </html>
