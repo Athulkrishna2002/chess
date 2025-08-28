@@ -317,7 +317,7 @@ public class GameServiceImpl implements GameService {
     }
 
 
-    private boolean isInCheck(PieceColor color, Board board) {
+    public boolean isInCheck(PieceColor color, Board board) {
         Piece[][] grid = board.getGrid();
 
         int kingRow = -1, kingCol = -1;
