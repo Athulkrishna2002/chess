@@ -95,12 +95,32 @@ public class GameServiceImpl implements GameService {
 // The player whose turn it is now is the one who must respond
         PieceColor currentTurnColor = gameState.getCurrentTurn().equals("WHITE") ? PieceColor.WHITE : PieceColor.BLACK;
 
+        // --- Locate the King ---
+        int kingRow = -1, kingCol = -1;
+        Piece[][] grid = board.getGrid();
+        outer:
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                Piece p = grid[r][c];
+                if (p instanceof King && p.getColor() == currentTurnColor) {
+                    kingRow = r;
+                    kingCol = c;
+                    break outer;
+                }
+            }
+        }
+
 // Is this player's king in check?
         boolean inCheck = isInCheck(currentTurnColor, board);
         gameState.setCheck(inCheck);
 
+        // Save king position in gameState (add 2 fields kingRow, kingCol in GameState model)
+        gameState.setKingRow(kingRow);
+        gameState.setKingCol(kingCol);
+
+
         if (inCheck) {
-            System.out.println(currentTurnColor + " King is in CHECK!");
+            System.out.println(currentTurnColor + " King is in CHECK at (" + kingRow + "," + kingCol + ")");
         }
 
 // Checkmate or Stalemate

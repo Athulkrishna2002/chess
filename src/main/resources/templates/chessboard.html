@@ -65,6 +65,12 @@
             background: #ff5252;
             color: white;
         }
+
+        .in-check {
+            background: #ff0000 !important;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
@@ -159,17 +165,18 @@
     }
 
     function updateBoard(data) {
-        const boardTable = document.getElementById("chessboard");
-        const board = data.board;
+    const boardTable = document.getElementById("chessboard");
+    const board = data.board;
 
-        for (let r = 0; r < 8; r++) {
-            const row = boardTable.rows[r];
-            for (let c = 0; c < 8; c++) {
-                const cell = row.cells[c];
-                const piece = board[r][c];
-                cell.querySelector("span").innerText = piece ? piece.symbol : "";
-            }
+    for (let r = 0; r < 8; r++) {
+        const row = boardTable.rows[r];
+        for (let c = 0; c < 8; c++) {
+            const cell = row.cells[c];
+            const piece = board[r][c];
+            cell.querySelector("span").innerText = piece ? piece.symbol : "";
+            cell.classList.remove("in-check"); // reset previous check highlights
         }
+    }
 
         document.querySelector(".badge span").innerText = data.turn;
 
@@ -192,17 +199,14 @@
     const topbar = document.querySelector(".topbar");
     let checkBadge = topbar.querySelector(".check");
 
-    if (data.inCheck) {
-        if (!checkBadge) {
-            checkBadge = document.createElement("div");
-            checkBadge.className = "badge check";
-            checkBadge.innerText = "CHECK!";
-            topbar.insertBefore(checkBadge, topbar.querySelector("form"));
-        }
-    } else {
-        if (checkBadge) checkBadge.remove();
+    if (data.inCheck && data.kingRow !== undefined && data.kingCol !== undefined) {
+        const msg = document.createElement("div");
+            msg.className = "msg";
+            msg.innerText = `${data.turn} KING IS IN CHECK!`;
+            document.body.insertBefore(msg, boardTable);
+        const kingCell = boardTable.rows[data.kingRow].cells[data.kingCol];
+        kingCell.classList.add("in-check");
     }
-
     }
 </script>
 

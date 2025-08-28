@@ -24,6 +24,9 @@ public class GameState {
     private int lastMoveToRow;
     private int lastMoveToCol;
 
+    private int kingRow = -1;
+    private int kingCol = -1;
+
     private int halfMoveClock; // For 50-move rule
 
 
