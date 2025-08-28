@@ -75,14 +75,17 @@
     position: absolute;
     background: #fff8c4;
     border: 1px solid #ccc;
-    padding: 3px 6px;
+    padding: 4px 8px;
     border-radius: 8px;
-    font-size: 12px;
+    font-size: 13px;
     white-space: nowrap;
     z-index: 100;
     transform: translate(-50%, -120%);
-    animation: fadeInOut 3s ease;
+    animation: fadeInOut 8s ease; /* show longer */
+    color: #000 !important; /* force black text */
+    font-weight: bold;
 }
+
 
 @keyframes fadeInOut {
     0% { opacity: 0; }
@@ -212,6 +215,7 @@
     if (data.checkmate) {
         const msg = document.createElement("div");
         msg.className = "msg";
+        makeKingChat(data);
         msg.innerText = `${data.winner} Wins by Checkmate!`;
         document.body.insertBefore(msg, boardTable);
     } else if (data.stalemate) {
@@ -288,6 +292,27 @@ function showChatBubble(cell, text) {
     setTimeout(() => bubble.remove(), 3000); // disappears after 3s
 }
 
+
+function makeKingChat(data) {
+    const boardTable = document.getElementById("chessboard");
+
+    const loserColor = data.turn;
+    const kingRow = data.kingRow;
+    const kingCol = data.kingCol;
+
+    if (kingRow !== undefined && kingCol !== undefined) {
+        const kingCell = boardTable.rows[kingRow].cells[kingCol];
+
+        const chat = document.createElement("div");
+        chat.className = "chat-bubble";
+        chat.innerText =
+            "Maybe you defeated me here, but one day another shall rise to challenge you...";
+
+        kingCell.appendChild(chat);
+
+        setTimeout(() => chat.remove(), 8000); // visible for 8s
+    }
+}
 
 
 </script>
