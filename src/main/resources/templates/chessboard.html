@@ -71,6 +71,33 @@
             color: white;
         }
 
+        .chat-bubble {
+    position: absolute;
+    background: #fff8c4;
+    border: 1px solid #ccc;
+    padding: 3px 6px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    transform: translate(-50%, -120%);
+    animation: fadeInOut 3s ease;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+
+@keyframes floatUp {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(-40px); opacity: 0; }
+}
+
+
     </style>
 </head>
 <body>
@@ -178,36 +205,91 @@
         }
     }
 
-        document.querySelector(".badge span").innerText = data.turn;
+    document.querySelector(".badge span").innerText = data.turn;
 
-        // Update check/checkmate/stalemate messages
-        document.querySelectorAll(".msg").forEach(el => el.remove());
-
-        if (data.checkmate) {
-            const msg = document.createElement("div");
-            msg.className = "msg";
-            msg.innerText = `${data.winner} Wins by Checkmate!`;
-            document.body.insertBefore(msg, boardTable);
-        } else if (data.stalemate) {
-            const msg = document.createElement("div");
-            msg.className = "msg";
-            msg.innerText = "🤝 Stalemate - It's a Draw!";
-            document.body.insertBefore(msg, boardTable);
-        }
-
-        // ✅ Update CHECK! badge dynamically
-    const topbar = document.querySelector(".topbar");
-    let checkBadge = topbar.querySelector(".check");
+    // Update messages
+    document.querySelectorAll(".msg").forEach(el => el.remove());
+    if (data.checkmate) {
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.innerText = `${data.winner} Wins by Checkmate!`;
+        document.body.insertBefore(msg, boardTable);
+    } else if (data.stalemate) {
+        const msg = document.createElement("div");
+        msg.className = "msg";
+        msg.innerText = "🤝 Stalemate - It's a Draw!";
+        document.body.insertBefore(msg, boardTable);
+    }
 
     if (data.inCheck && data.kingRow !== undefined && data.kingCol !== undefined) {
         const msg = document.createElement("div");
-            msg.className = "msg";
-            msg.innerText = `${data.turn} KING IS IN CHECK!`;
-            document.body.insertBefore(msg, boardTable);
+        msg.className = "msg";
+        msg.innerText = `${data.turn} KING IS IN CHECK!`;
+        document.body.insertBefore(msg, boardTable);
         const kingCell = boardTable.rows[data.kingRow].cells[data.kingCol];
         kingCell.classList.add("in-check");
     }
+
+    // ✅ Trigger pawn chat after every board update
+    console.log("Running pawn chat check...");
+    makePawnsChat(boardTable);  // <-- FIXED
+}
+
+
+
+    function makePawnsChat(boardTable) {
+    const pawns = [];
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const cell = boardTable.rows[r].cells[c];
+            if (cell.innerText === "♙" || cell.innerText === "♟") {
+                pawns.push({ r, c });
+            }
+        }
     }
+
+    // pick two same-color pawns
+    for (let i = 0; i < pawns.length; i++) {
+        for (let j = i + 1; j < pawns.length; j++) {
+            const p1 = pawns[i], p2 = pawns[j];
+            if (boardTable.rows[p1.r].cells[p1.c].innerText === boardTable.rows[p2.r].cells[p2.c].innerText) {
+                triggerPawnChat(boardTable, p1.r, p1.c, p2.r, p2.c);
+                return; // only one pair chats
+            }
+        }
+    }
+}
+
+function triggerPawnChat(boardTable, r1, c1, r2, c2) {
+    const pawn1 = boardTable.rows[r1].cells[c1];
+    const pawn2 = boardTable.rows[r2].cells[c2];
+
+    const dialogues = [
+        ["Hi 👋", "Hello! How are you?"],
+        ["Stay strong!", "You too, brother!"],
+        ["We guard the king!", "Always!"],
+        ["Long march ahead...", "But we’ll make it!"],
+        ["Ready?", "Always ready!"]
+    ];
+
+    const [msg1, msg2] = dialogues[Math.floor(Math.random() * dialogues.length)];
+
+    showChatBubble(pawn1, msg1);
+    setTimeout(() => showChatBubble(pawn2, msg2), 1500);
+}
+
+
+function showChatBubble(cell, text) {
+    const bubble = document.createElement("div");
+    bubble.className = "chat-bubble";
+    bubble.innerText = text;
+    cell.appendChild(bubble);
+
+    setTimeout(() => bubble.remove(), 3000); // disappears after 3s
+}
+
+
+
 </script>
 
 </body>
