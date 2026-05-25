@@ -14,7 +14,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function fetchGame(): Promise<GameStateResponse> {
-  return request<GameStateResponse>('/');
+  return request<GameStateResponse>('/api/game');
 }
 
 export function postMove(body: MoveRequest): Promise<MoveResponse> {
