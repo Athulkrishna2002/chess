@@ -4,7 +4,7 @@ export const PIECE_MODEL_URL: Record<PieceType, string> = {
   PAWN: '/models/pawn/scene.gltf',
   ROOK: '/models/rook/scene.gltf',
   KNIGHT: '/models/knight/scene.gltf',
-  BISHOP: '/models/bishop/scene.gltf',
+  BISHOP: '/models/bishop/wooden_bishop_chess_piece.glb',
   QUEEN: '/models/queen/scene.gltf',
   KING: '/models/king/scene.gltf',
 };
